@@ -1,0 +1,22 @@
+{
+    "name": "daniel/secure-token-php",
+    "description": "comprehensive php JWT solution",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Daniel McCarthy",
+            "email": "dmccarthy2012@hotmail.co.uk"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^10.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "SecureTokenPhp\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit --colors=always --testdox tests/Integration/"
+    }
+}
