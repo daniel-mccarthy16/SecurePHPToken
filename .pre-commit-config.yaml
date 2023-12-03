@@ -1,0 +1,15 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: phpcs
+        name: PHP_CodeSniffer
+        entry: vendor/bin/phpcs
+        language: system
+        files: \.(php|phtml)$
+        args: ['--standard=PSR12', 'src', 'tests']
+    -   id: parallel-lint
+        name: PHP Parallel Lint
+        entry: vendor/bin/parallel-lint
+        language: system
+        files: \.(php|phtml)$
+        args: ['src', 'tests']

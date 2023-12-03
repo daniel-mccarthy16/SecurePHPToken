@@ -1,93 +1,103 @@
-<?php 
+<?php
 
 namespace SecureTokenPhp;
 
+class Token
+{
+    private Header $header;
+    private Payload $payload;
+    private ?string $binarySignature = null;
 
-class Token {
-
-    private ?Header $header = null;
-    private ?Payload $payload = null;
-    private ?string $signature = null;
-    private ?string $encodedHeader = null ;
-    private ?string $encodedPayload = null;
-    private ?string $encodedSignature = null;
-    private bool $valid = false;
-
-    private function __construct() {
+    private function __construct()
+    {
         // Private constructor to force using factory methods
     }
 
-    public static function fromEncoded(string $serializedToken): self {
+    public static function fromEncoded(string $serializedToken): self
+    {
         $instance = new self();
-        [ $instance->encodedHeader, $instance->encodedPayload, $instance->encodedSignature ]  = Token::split_serialized_token($serializedToken);
-        $instance->header = new Header($instance->get_encoded_header()); 
-        $instance->payload = new Payload($instance->get_encoded_payload()); 
-        if ($instance->encodedSignature !== null) {
-            $instance->signature = base64_decode($instance->encodedSignature);
+        [ $encodedHeader, $encodedPayload, $encodedSignature ] = Utility::splitSerializedToken($serializedToken);
+
+        $instance->header = Header::fromEncoded($encodedHeader);
+        $instance->payload = Payload::fromEncoded($encodedPayload);
+
+        if ($encodedSignature !== null) {
+            //reverse process used to make signature url/filesystem safe
+            $decodedSignature = strtr($encodedSignature, '-_', '+/');
+            // Add padding if necessary
+            $padding = strlen($decodedSignature) % 4;
+            if ($padding > 0) {
+                $decodedSignature .= str_repeat('=', 4 - $padding);
+            }
+            $instance->binarySignature = base64_decode($decodedSignature);
         }
+
         return $instance;
     }
 
-    public static function fromUnencoded(Header $header, Payload $payload, ?string $signature = null): self {
+    public static function fromUnencoded(Header $header, Payload $payload, ?string $binarySignature = null): self
+    {
         $instance = new self();
         $instance->header = $header;
         $instance->payload = $payload;
-        $instance->signature = $signature;
+        $instance->binarySignature = $binarySignature;
         return $instance;
     }
 
-    private static function split_serialized_token(string $serializedToken) :  array {
-        
-        $parts = explode('.', $serializedToken);
-        // Check for two or three parts
-        if (count($parts) !== 2) {
-            throw new \Exception('unencrypted tokens should have a header and payload but no signature');
-        }
-        return $parts;
 
-    }
-
-    public function getClaim(string $claimName) : ?string {
+    public function getClaim(string $claimName): ?string
+    {
         return $this->payload->getClaim($claimName);
     }
 
-    public function signToken(?string $privateKey) {
+    public function signToken(?string $privateKey)
+    {
         Crypto::sign(token: $this, privateKey: $privateKey);
     }
 
-    public function get_header () : Header {
+    public function getHeader(): Header
+    {
         return $this->header;
     }
 
-    
-    public function get_payload () : Payload {
+
+    public function getPayload(): Payload
+    {
         return $this->payload;
     }
 
-    public function get_encoded_payload () : string {
-        return $this->encodedPayload;
+    public function getEncodedPayload(): string
+    {
+        return $this->header->encode();
     }
 
-    public function getAlgorithm() : ?Algorithm {
+    public function getAlgorithm(): ?Algorithm
+    {
         return $this->header->getAlgorithm();
     }
-    
-    public function get_signature () : ?string {
-        return $this->signature;
+
+    public function getSignatureBinary(): ?string
+    {
+        return $this->binarySignature;
     }
 
-    public function set_signature (string $signature) {
-        $this->signature = $signature;
+    public function getEncodedSignature(): ?string
+    {
+        return rtrim(strtr(base64_encode($this->binarySignature), '+/', '-_'), '=');
     }
 
-    public function encode () : string {
+    public function setSignature(string $binarySignature)
+    {
+        $this->binarySignature = $binarySignature;
+    }
+
+    public function encode(): string
+    {
         return $this->header->encode() . "." . $this->payload->encode();
     }
 
-    public function isSignatureValid(string $secretKey): bool {
-        // Verify the signature
-        return true;
+    public function encodeWithSignature(): string
+    {
+        return $this->encode() + "." + $this->getEncodedSignature();
     }
-
 }
-	

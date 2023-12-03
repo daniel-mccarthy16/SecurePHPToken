@@ -1,2 +1,4 @@
 composer.lock 
 vendor/
+protocolinformation
+.phpunit.result.cache
