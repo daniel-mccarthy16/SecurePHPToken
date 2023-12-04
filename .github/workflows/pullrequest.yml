@@ -1,8 +1,6 @@
 name: PhpSecureToken CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -12,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        php-versions: ['8.0', '8.1']  # Specify PHP versions here
+        php-versions: ['8.1']  # Specify PHP versions here
 
     steps:
     - uses: actions/checkout@v2
