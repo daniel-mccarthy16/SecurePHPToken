@@ -19,8 +19,8 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-versions }}
-        extensions: mbstring, xml
-        coverage: none
+        extensions: mbstring, xml, xdebug
+        coverage: xdebug
 
     - name: Validate composer.json and composer.lock
       run: composer validate
@@ -36,11 +36,17 @@ jobs:
     - name: Check Code Formatting
       run: composer check-format
 
-    # Running Tests
-    - name: Run PHPUnit tests
-      run: composer test
+    # Running Tests with Coverage Reporting
+    - name: Run PHPUnit tests with coverage
+      run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml  # Specify the coverage report file
+        token: ${{ secrets.CODECOV_TOKEN }}
