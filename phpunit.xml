@@ -1,12 +1,15 @@
-<phpunit bootstrap="vendor/autoload.php">
-    <testsuites>
-        <testsuite name="JWS">
-		<file>tests/Integration/JWS.php</file>
-        </testsuite>
-    </testsuites>
-    <coverage>
-        <include>
-            <directory suffix=".php">src/</directory>
-        </include>
-    </coverage>
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" bootstrap="vendor/autoload.php" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd">
+  <testsuites>
+    <testsuite name="AllTests">
+      <directory>tests/Integration</directory>
+      <directory>tests/Unit</directory>
+    </testsuite>
+  </testsuites>
+  <coverage/>
+  <source>
+    <include>
+      <directory suffix=".php">src/</directory>
+    </include>
+  </source>
 </phpunit>

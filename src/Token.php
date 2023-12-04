@@ -22,14 +22,7 @@ class Token
         $instance->payload = Payload::fromEncoded($encodedPayload);
 
         if ($encodedSignature !== null) {
-            //reverse process used to make signature url/filesystem safe
-            $decodedSignature = strtr($encodedSignature, '-_', '+/');
-            // Add padding if necessary
-            $padding = strlen($decodedSignature) % 4;
-            if ($padding > 0) {
-                $decodedSignature .= str_repeat('=', 4 - $padding);
-            }
-            $instance->binarySignature = base64_decode($decodedSignature);
+            $instance->binarySignature = Utility::decodeFileSystemSafeBase64($encodedSignature);
         }
 
         return $instance;
@@ -83,7 +76,10 @@ class Token
 
     public function getEncodedSignature(): ?string
     {
-        return rtrim(strtr(base64_encode($this->binarySignature), '+/', '-_'), '=');
+        if ($this->binarySignature === null) {
+            throw new \InvalidArgumentException("binarySignature does not exist");
+        }
+        return Utility::fileSystemSafeBase64($this->binarySignature);
     }
 
     public function setSignature(string $binarySignature)

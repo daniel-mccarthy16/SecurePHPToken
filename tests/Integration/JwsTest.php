@@ -10,7 +10,7 @@ use SecureTokenPhp\Payload;
 use SecureTokenPhp\Header;
 use SecureTokenPhp\Exceptions\InvalidHeaderException;
 
-final class JWS extends TestCase
+final class JwsTest extends TestCase
 {
     private const CLAIM_A_NAME = "claimA";
     private const CLAIM_A_VALUE = "A";
@@ -74,13 +74,14 @@ final class JWS extends TestCase
         $header->setAlgorithm(Algorithm::none);
         $token = Token::fromUnencoded(header: $header, payload: $payload);
         echo "=====================================\n";
-        echo "JWT UNSECURED TOKEN: " . $token->encode() . "." . $token->getEncodedSignature() . "\n";
+        echo "UNSECURED TOKEN: " . $token->encode() . "\n";
         echo "=====================================\n\n";
         $this->assertInstanceOf(Token::class, $token);
         $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
+
 
     /**
      * @test
