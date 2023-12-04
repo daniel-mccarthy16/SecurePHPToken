@@ -1,0 +1,7 @@
+<phpunit bootstrap="vendor/autoload.php">
+    <testsuites>
+        <testsuite name="JWS">
+		<file>tests/Integration/JWS.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>
