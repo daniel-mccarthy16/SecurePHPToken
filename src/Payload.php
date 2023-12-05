@@ -22,12 +22,20 @@ class Payload
         return $instance;
     }
 
-     /**
-     * The "iss" (issuer) claim identifies the principal that issued the JWT.
-     * @param string $iss the issuer of the jwt.
+    /**
+     * Set the "iss" (Issuer) claim, which should be a case-sensitive string.
+     *
+     * @param string $iss The Issuer value as a case-sensitive string.
+     * @throws InvalidArgumentException If the input is not a valid string.
      */
-    public function setIss(string $iss)
+    public function setIssuer(string $iss)
     {
+        if ($iss === '') {
+            throw new \InvalidArgumentException('Issuer "iss" cannot be an empty string.');
+        }
+
+        // Additional validation can be added here if needed
+
         $this->claims[self::ISS] = $iss;
     }
 
@@ -35,7 +43,7 @@ class Payload
      *
      * @return string|null the issuer of the jwt.
      */
-    public function getIss(): ?string
+    public function getIssuer(): ?string
     {
         return $this->claims[self::ISS] ?? null;
     }
@@ -44,7 +52,7 @@ class Payload
      * The "sub" (subject) claim identifies the principal that is the subject of the JWT.
      * @param string $sub the sub of the jwt.
      */
-    public function setSub(string $sub)
+    public function setSubject(string $sub)
     {
         $this->claims[self::SUB] = $sub;
     }
@@ -54,7 +62,7 @@ class Payload
      *
      * @return string|null the sub of the jwt.
      */
-    public function getSub(): ?string
+    public function getSubject(): ?string
     {
         return $this->claims[self::SUB] ?? null;
     }
@@ -63,7 +71,7 @@ class Payload
      * The "aud" (audience) claim identifies the recipients that the JWT is intended for.
      * @param string $aud the aud of the jwt.
      */
-    public function setAud(string $aud)
+    public function setAudience(string $aud)
     {
         $this->claims[self::AUD] = $aud;
     }
@@ -73,41 +81,59 @@ class Payload
      *
      * @return string|null the aud of the jwt.
      */
-    public function getAud(): ?string
+    public function getAudience(): ?string
     {
         return $this->claims[self::AUD] ?? null;
     }
 
-     /**
-      *  The "exp" (expiration time) claim identifies the expiration time on or
-      *  after which the JWT MUST NOT be accepted for processing.
+    /**
+     * Set the "exp" (expiration time) claim, identifying the time on or after which the JWT should not be accepted.
+     * The value should be a Unix timestamp representing this time.
      *
-     * @param string $exp the exp of the jwt.
+     * @param int $exp The Unix timestamp for the expiration time.
+     * @throws InvalidArgumentException If the provided timestamp is not valid.
      */
-    public function setExp(string $exp)
+    public function setExpiration(int $exp)
     {
+        // Check if the timestamp is a valid Unix timestamp
+        if ($exp <= 0 || !date('Y-m-d H:i:s', $exp)) {
+            throw new \InvalidArgumentException('Invalid Unix timestamp provided for exp.');
+        }
+
         $this->claims[self::EXP] = $exp;
     }
 
     /**
-     * get the exp (exp) claim.
+     * Get the exp (expiration time) claim.
      *
-     * @return string|null the exp of the jwt.
+     * @return int|null The expiration time of the JWT as a Unix timestamp, or null if not set.
      */
-    public function getExp(): ?string
+    public function getExpiration(): ?int
     {
         return $this->claims[self::EXP] ?? null;
     }
 
-     /**
-      * The "nbf" (not before) claim identifies the time before which the
-      * JWT MUST NOT be accepted for processinget the nbf
+    /**
+     * Set the "nbf" (not before) claim, identifying the time before which the JWT should not be accepted.
+     * The value should be a Unix timestamp representing a future time.
      *
-     * @param string $nbfg the exp of the jwt.
+     * @param int $nbf The Unix timestamp for the not-before time.
+     * @throws InvalidArgumentException If the provided timestamp is not valid or not in the future.
      */
-    public function setNbf(string $exp)
+    public function setNotBefore(int $nbf)
     {
-        $this->claims[self::NBF] = $exp;
+        // Check if the timestamp is a valid Unix timestamp
+        if ($nbf <= 0 || !date('Y-m-d H:i:s', $nbf)) {
+            throw new \InvalidArgumentException('Invalid Unix timestamp provided for nbf.');
+        }
+
+        // Check if the timestamp is in the future
+        $currentTimestamp = time();
+        if ($nbf <= $currentTimestamp) {
+            throw new \InvalidArgumentException('The nbf time must be set in the future.');
+        }
+
+        $this->claims[self::NBF] = $nbf;
     }
 
     /**
@@ -115,40 +141,50 @@ class Payload
      *
      * @return string|null the nbfg of the jwt.
      */
-    public function getNbf(): ?string
+    public function getNotBefore(): ?int
     {
         return $this->claims[self::NBF] ?? null;
     }
 
 
-     /**
-     * set the iat
+    /**
+     * Set the "iat" (Issued At) claim to the specified time or to the current time if not specified.
+     * The "iat" claim identifies the time at which the JWT was issued and is represented as a NumericDate.
+     * If no time is provided, the current server time is used.
      *
-     * @param string $iatg the exp of the jwt.
+     * @param int|null $iat The Unix timestamp when the JWT was issued. Optional.
      */
-    public function setIat(string $exp)
+    public function setIssuedAt(?int $iat = null)
     {
-        $this->claims[self::IAT] = $exp;
+        $this->claims[self::IAT] = $iat ?? time();
     }
 
     /**
-     * get the iatg (exp) claim.
+     * Get the iat (Issued At) claim.
      *
-     * @return string|null the iatg of the jwt.
+     * @return int|null The Issued At time of the JWT as a Unix timestamp, or null if not set.
      */
-    public function getiat(): ?string
+    public function getIssuedAt(): ?int
     {
         return $this->claims[self::IAT] ?? null;
     }
 
 
-     /**
-     * The "jti" (JWT ID) claim provides a unique identifier for the JWT.
-     * @param string $jti the exp of the jwt.
+    /**
+     * Set or auto-generate the "jti" (JWT ID) claim.
+     * If $jti is provided, it is used; if $jti is null, a unique identifier is auto-generated.
+     *
+     * @param string|null $jti The JWT ID to set. If null, a unique identifier will be auto-generated.
      */
-    public function setJti(string $exp)
+    public function setJwtId(?string $jti = null)
     {
-        $this->claims[self::JTI] = $exp;
+        if ($jti === null) {
+            // Auto-generate a unique JWT ID
+            $this->claims[self::JTI] = Utility::generateUniqueId();
+        } else {
+            // Use the provided JWT ID
+            $this->claims[self::JTI] = $jti;
+        }
     }
 
     /**
@@ -156,15 +192,29 @@ class Payload
      *
      * @return string|null the jtig of the jwt.
      */
-    public function getJti(): ?string
+    public function getJwdId(): ?string
     {
         return $this->claims[self::JTI] ?? null;
     }
 
+
     /**
-     * set a claim that is not defined as registered in by RFC7519
+     * Dump all claims
      *
-     * @return string
+     * @return array
+     */
+    public function getAllClaims(): array
+    {
+        return $this->claims;
+    }
+
+    /**
+     * Set a custom claim or a claim that is not defined as registered by RFC 7519.
+     * This method can be used to set claims without the restrictions imposed by the setters for registered claims.
+     * Useful for special cases where non-standard or additional claims are required.
+     *
+     * @param string $claimName The name of the claim to set.
+     * @param string $claimValue The value of the claim.
      */
     public function setClaim(string $claimName, string $claimValue)
     {
@@ -172,9 +222,12 @@ class Payload
     }
 
     /**
-     * get the jti (exp) claim.
+     * Get the value of a specific claim by its name.
+     * This method can be used to retrieve both registered and custom claims.
+     * Returns null if the specified claim is not present in the JWT.
      *
-     * @return string|null the jtig of the jwt.
+     * @param string $claimName The name of the claim to retrieve.
+     * @return string|null The value of the claim, or null if it is not set.
      */
     public function getClaim(string $claimName): ?string
     {
@@ -184,6 +237,6 @@ class Payload
     //remove "=" padding and replace + and / with - and _ to make url safe
     public function encode(): string
     {
-        return rtrim(strtr(base64_encode(json_encode($this->claims)), '+/', '-_'), '=');
+        return Utility::fileSystemSafeBase64(json_encode($this->claims));
     }
 }
