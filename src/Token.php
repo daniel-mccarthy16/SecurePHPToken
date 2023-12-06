@@ -2,55 +2,37 @@
 
 namespace SecureTokenPhp;
 
-class Token
+use OpenSSLAsymmetricKey;
+use SecureTokenPhp\Exceptions\CryptoException;
+
+abstract class Token
 {
-    private Header $header;
-    private Payload $payload;
-    private ?string $binarySignature = null;
+    protected Payload $payload;
+    protected ?string $binarySignature = null;
+    protected ?OpenSSLAsymmetricKey $privateKey = null;
+    protected ?OpenSSLAsymmetricKey $publicKey = null;
+    protected ?string $symmetricKey = null;
 
     private function __construct()
     {
         // Private constructor to force using factory methods
     }
 
-    public static function fromEncoded(string $serializedToken): self
-    {
-        $instance = new self();
-        [ $encodedHeader, $encodedPayload, $encodedSignature ] = Utility::splitSerializedToken($serializedToken);
-
-        $instance->header = Header::fromEncoded($encodedHeader);
-        $instance->payload = Payload::fromEncoded($encodedPayload);
-
-        if ($encodedSignature !== null) {
-            $instance->binarySignature = Utility::decodeFileSystemSafeBase64($encodedSignature);
-        }
-
-        return $instance;
-    }
-
-    public static function fromUnencoded(Header $header, Payload $payload, ?string $binarySignature = null): self
-    {
-        $instance = new self();
-        $instance->header = $header;
-        $instance->payload = $payload;
-        $instance->binarySignature = $binarySignature;
-        return $instance;
-    }
-
+    abstract public static function fromEncoded(string $serializedToken): Token;
 
     public function getClaim(string $claimName): ?string
     {
         return $this->payload->getClaim($claimName);
     }
 
-    public function signToken(?string $privateKey)
+    public function setClaim(string $claimName, string $claimValue): void
     {
-        Crypto::sign(token: $this, privateKey: $privateKey);
+         $this->payload->setClaim($claimName, $claimValue);
     }
 
-    public function getHeader(): Header
+    public function signToken()
     {
-        return $this->header;
+        Crypto::sign(token: $this);
     }
 
 
@@ -59,14 +41,14 @@ class Token
         return $this->payload;
     }
 
-    public function getEncodedPayload(): string
+    public function setPayload(Payload $payload): void
     {
-        return $this->header->encode();
+         $this->payload = $payload;
     }
 
-    public function getAlgorithm(): ?Algorithm
+    public function getEncodedPayload(): string
     {
-        return $this->header->getAlgorithm();
+        return $this->payload->encode();
     }
 
     public function getSignatureBinary(): ?string
@@ -87,13 +69,76 @@ class Token
         $this->binarySignature = $binarySignature;
     }
 
-    public function encode(): string
-    {
-        return $this->header->encode() . "." . $this->payload->encode();
-    }
+    abstract public function encode(): string;
+
 
     public function encodeWithSignature(): string
     {
         return $this->encode() + "." + $this->getEncodedSignature();
+    }
+
+    public function setPrivateKey(string $key): void
+    {
+        //todo catch generic type error and throw below exception
+        $this->privateKey = openssl_get_privatekey($key);
+        if (!$this->privateKey) {
+            throw new CryptoException("key provided not valid");
+        }
+    }
+
+    public function getPrivateKey(): ?OpenSSLAsymmetricKey
+    {
+        return $this->privateKey;
+    }
+
+    public function getPrivateKeyOrThrow(): ?OpenSSLAsymmetricKey
+    {
+        $key =  $this->privateKey;
+        if ($key === null) {
+            throw new CryptoException("Please set your encryption key on token");
+        }
+        return $key;
+    }
+
+    public function setPublicKey(string $key): void
+    {
+        //todo catch generic type error and throw below exception
+        $this->publicKey = openssl_get_publickey($key);
+        if (!$this->publicKey) {
+            throw new CryptoException("Failed to process the public key.");
+        }
+    }
+
+    public function getPublicKey(): ?OpenSSLAsymmetricKey
+    {
+        return $this->publicKey;
+    }
+
+    public function getPublicKeyOrThrow(): ?OpenSSLAsymmetricKey
+    {
+        $key =  $this->publicKey;
+        if ($key === null) {
+            throw new CryptoException("Please set your public key on the token");
+        }
+        return $key;
+    }
+
+    public function setSymmetricalKey(string $key): void
+    {
+        $this->symmetricKey = $key;
+    }
+
+    public function getSymmetricalKey(): ?string
+    {
+        return $this->symmetricKey;
+    }
+
+    public function getSymmetricalKeyOrThrow(): string
+    {
+        $key =  $this->symmetricKey;
+        if ($key === null) {
+            throw new CryptoException("Please set your symmetric key on the token");
+        }
+        return $key;
     }
 }

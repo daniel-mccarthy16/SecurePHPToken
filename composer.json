@@ -23,6 +23,7 @@
     },
     "scripts": {
         "test": "./vendor/bin/phpunit --colors=always --testdox",
+        "test-jwe": "./vendor/bin/phpunit --colors=always --testdox tests/Integration/JweTest.php",
         "lint": "parallel-lint --exclude vendor .",
         "check-format": "phpcs --standard=PSR12 src tests",
         "fix-style": "phpcbf --standard=PSR12 src tests"

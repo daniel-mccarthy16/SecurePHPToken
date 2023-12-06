@@ -3,11 +3,12 @@
 namespace SecureTokenPhp\Tests;
 
 use PHPUnit\Framework\TestCase;
-use SecureTokenPhp\Algorithm;
+use SecureTokenPhp\JwsAlgorithmEnum;
 use SecureTokenPhp\Token;
+use SecureTokenPhp\JwsToken;
+use SecureTokenPhp\JwsHeader;
 use SecureTokenPhp\Crypto;
 use SecureTokenPhp\Payload;
-use SecureTokenPhp\Header;
 use SecureTokenPhp\Exceptions\InvalidHeaderException;
 
 final class JwsTest extends TestCase
@@ -70,12 +71,9 @@ final class JwsTest extends TestCase
         $payload = new Payload();
         $payload->setClaim(claimName: self::CLAIM_A_NAME, claimValue: self::CLAIM_A_VALUE);
         $payload->setClaim(claimName: self::CLAIM_B_NAME, claimValue: self::CLAIM_B_VALUE);
-        $header = new Header();
-        $header->setAlgorithm(Algorithm::none);
-        $token = Token::fromUnencoded(header: $header, payload: $payload);
-        echo "=====================================\n";
-        echo "UNSECURED TOKEN: " . $token->encode() . "\n";
-        echo "=====================================\n\n";
+        $header = new JwsHeader();
+        $header->setAlgorithm(JwsAlgorithmEnum::none);
+        $token = new JwsToken(header: $header, payload: $payload);
         $this->assertInstanceOf(Token::class, $token);
         $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
@@ -90,7 +88,7 @@ final class JwsTest extends TestCase
     public function unsecuredJwtTokenDeserializationAndValidate()
     {
 
-        $token = Token::fromEncoded(self::UNSECURED_ENCODED_TOKEN);
+        $token = JwsToken::fromEncoded(self::UNSECURED_ENCODED_TOKEN);
         $this->assertInstanceOf(Token::class, $token);
         $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
@@ -104,7 +102,7 @@ final class JwsTest extends TestCase
     public function unsecuredJwtTokenDeserializationWithInvalidHeader()
     {
         $this->expectException(InvalidHeaderException::class);
-        Token::fromEncoded(self::UNSECURED_ENCODED_TOKEN_INVALID_HEADER);
+        JwsToken::fromEncoded(self::UNSECURED_ENCODED_TOKEN_INVALID_HEADER);
     }
 
     /**
@@ -118,19 +116,17 @@ final class JwsTest extends TestCase
         $payload->setClaim(claimName: self::CLAIM_A_NAME, claimValue: self::CLAIM_A_VALUE);
         $payload->setClaim(claimName: self::CLAIM_B_NAME, claimValue: self::CLAIM_B_VALUE);
 
-        $header = new Header();
-        $header->setAlgorithm(Algorithm::HS256);
+        $header = new JwsHeader();
+        $header->setAlgorithm(JwsAlgorithmEnum::HS256);
 
-        $token = Token::fromUnencoded(header: $header, payload: $payload);
+        $token = new JwsToken(header: $header, payload: $payload);
         $this->assertInstanceOf(Token::class, $token);
 
-        $token->signToken(privateKey: self::HS256KEY);
+        //TODO need a set public / set private and / set key
+        $token->setSymmetricalKey(self::HS256KEY);
+        $token->signToken();
 
-        echo "=====================================\n";
-        echo "JWT HS256 TOKEN: " . $token->encode() . "." . $token->getEncodedSignature() . "\n";
-        echo "=====================================\n\n";
-
-        $this->assertTrue(Crypto::validate(token: $token, key: self::HS256KEY));
+        $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
@@ -141,17 +137,17 @@ final class JwsTest extends TestCase
      */
     public function hmacSha256CorrectlyIdentifysMismatchedSignature()
     {
-        $token = Token::fromEncoded(self::HS256_ENCODED_TOKEN_INVALID_SIG);
+
+        $token = JwsToken::fromEncoded(self::HS256_ENCODED_TOKEN_INVALID_SIG, symmetricKey: self::HS256KEY);
         $this->assertInstanceOf(Token::class, $token);
-        $this->assertFalse(Crypto::validate(token: $token, key: self::HS256KEY));
+        $this->assertFalse(Crypto::validate(token: $token));
     }
 
     public function hmacSha256JwsTokenDeserializationAndValidate()
     {
-
-        $token = Token::fromEncoded(self::HS256_ENCODED_TOKEN);
+        $token = JwsToken::fromEncoded(self::HS256_ENCODED_TOKEN, symmetricKey: self::HS256KEY);
         $this->assertInstanceOf(Token::class, $token);
-        $this->assertTrue(Crypto::validate(token: $token, key: self::HS256KEY));
+        $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
@@ -166,15 +162,14 @@ final class JwsTest extends TestCase
         $payload->setClaim(claimName: self::CLAIM_A_NAME, claimValue: self::CLAIM_A_VALUE);
         $payload->setClaim(claimName: self::CLAIM_B_NAME, claimValue: self::CLAIM_B_VALUE);
 
-        $header = new Header();
-        $header->setAlgorithm(Algorithm::ES256);
-        $token = Token::fromUnencoded(header: $header, payload: $payload);
-        $token->signToken(privateKey: self::ES256PRIVKEY);
-        echo "=====================================\n";
-        echo "JWT ES256 TOKEN: " . $token->encode() . "." . $token->getEncodedSignature() . "\n";
-        echo "=====================================\n\n";
+        $header = new JwsHeader();
+        $header->setAlgorithm(JwsAlgorithmEnum::ES256);
+        $token = new JwsToken(header: $header, payload: $payload);
+        $token->setPrivateKey(self::ES256PRIVKEY);
+        $token->setPublicKey(self::ES256PUBKEY);
+        $token->signToken();
         $this->assertInstanceOf(Token::class, $token);
-        $this->assertTrue(Crypto::validate(token: $token, key: self::ES256PUBKEY));
+        $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
@@ -185,10 +180,14 @@ final class JwsTest extends TestCase
      */
     public function elipticCurveSha256JwsTokenDeserializationAndValidate()
     {
+        $token = JwsToken::fromEncoded(
+            self::ES256_ENCODED_TOKEN,
+            privateKey: self::ES256PRIVKEY,
+            publicKey: self::ES256PUBKEY
+        );
 
-        $token = Token::fromEncoded(self::ES256_ENCODED_TOKEN);
         $this->assertInstanceOf(Token::class, $token);
-        $this->assertTrue(Crypto::validate(token: $token, key: self::ES256PUBKEY));
+        $this->assertTrue(Crypto::validate(token: $token));
         $this->assertEquals($token->getClaim(self::CLAIM_A_NAME), self::CLAIM_A_VALUE, 'Claim A should match.');
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
@@ -199,8 +198,12 @@ final class JwsTest extends TestCase
      */
     public function elipticCurveSha256CorrectlyIdentifysMismatchedSignature()
     {
-        $token = Token::fromEncoded(self::ES256_ENCODED_TOKEN_INVALID_SIG);
+        $token = JwsToken::fromEncoded(
+            self::ES256_ENCODED_TOKEN_INVALID_SIG,
+            privateKey: self::ES256PRIVKEY,
+            publicKey: self::ES256PUBKEY
+        );
         $this->assertInstanceOf(Token::class, $token);
-        $this->assertFalse(Crypto::validate(token: $token, key: self::ES256PUBKEY));
+        $this->assertFalse(Crypto::validate(token: $token));
     }
 }
