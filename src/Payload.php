@@ -2,6 +2,8 @@
 
 namespace SecureTokenPhp;
 
+use SecureTokenPhp\Exceptions\InvalidPayloadException;
+
 class Payload
 {
     private $claims = [];
@@ -15,10 +17,30 @@ class Payload
     private const AUD = "aud";
 
 
+
+    public function __construct(array $claims = [])
+    {
+        $this->claims = $claims;
+    }
+
     public static function fromEncoded(string $encodedPayload): self
     {
+
+        try {
+            $base64DecodedPayload = Utility::decodeFileSystemSafeBase64($encodedPayload);
+        } catch (\InvalidArgumentException $e) {
+            throw new InvalidPayloadException($e);
+        }
+
+
+        try {
+            $decodedData = Utility::jsonDecode($base64DecodedPayload);
+        } catch (\InvalidArgumentException $e) {
+            throw new InvalidPayloadException($e);
+        }
+
         $instance = new self();
-        $instance->claims = json_decode(base64_decode($encodedPayload), associative: true);
+        $instance->claims = $decodedData;
         return $instance;
     }
 
@@ -234,7 +256,6 @@ class Payload
         return $this->claims[$claimName] ?? null;
     }
 
-    //remove "=" padding and replace + and / with - and _ to make url safe
     public function encode(): string
     {
         return Utility::fileSystemSafeBase64(json_encode($this->claims));

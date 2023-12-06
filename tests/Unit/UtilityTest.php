@@ -85,4 +85,75 @@ final class UtilityTest extends TestCase
         $anotherUniqueId = Utility::generateUniqueId();
         $this->assertNotEquals($uniqueId, $anotherUniqueId);
     }
+
+    /**
+     * @test
+         * Test JSON decoding with valid JSON string.
+         */
+    public function testJsonDecodeValid()
+    {
+        $json = '{"name": "John", "age": 30}';
+        $expectedResult = ['name' => 'John', 'age' => 30];
+
+        $result = Utility::jsonDecode($json);
+
+        $this->assertEquals($expectedResult, $result, 'JSON decoded data does not match expected result.');
+    }
+
+        /**
+         * @test
+         * Test JSON decoding with invalid JSON string.
+         */
+    public function testJsonDecodeInvalid()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $invalidJson = '{"name": "John", "age": 30'; // Missing closing brace
+
+        Utility::jsonDecode($invalidJson);
+    }
+
+       /**
+       * @test
+       * Tests that jsonDecode throws an exception for non-UTF-8 encoded strings.
+       */
+    public function testJsonDecodeThrowsExceptionForNonUtf8String()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The serialized json string is not valid UTF-8.');
+
+        // Create a non-UTF-8 string
+        $nonUtf8String = "\xC3\x28"; // Invalid UTF-8 sequence
+
+        // Call jsonDecode with the non-UTF-8 string
+        Utility::jsonDecode($nonUtf8String);
+    }
+//         //TODO - make these tests work, figure out what dataProvider annotation is
+// /**
+//      * Test valid media types.
+//      *
+//      * @dataProvider validMediaTypeProvider
+//      * @param string $mediaType
+//      */
+//     public function testValidMediaTypes(string $mediaType)
+//     {
+//         $this->assertTrue(
+//             Utility::isValidMediaType($mediaType),
+//             "Failed asserting that '$mediaType' is a valid media type."
+//         );
+//     }
+//
+//     /**
+//      * Test invalid media types.
+//      *
+//      * @dataProvider invalidMediaTypeProvider
+//      * @param string $mediaType
+//      */
+//     public function testInvalidMediaTypes(string $mediaType)
+//     {
+//         $this->assertFalse(
+//             Utility::isValidMediaType($mediaType),
+//             "Failed asserting that '$mediaType' is an invalid media type."
+//         );
+//     }
 }
