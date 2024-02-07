@@ -8,7 +8,6 @@ This project is mainly for educational purposes and should be used accordingly.
 
 ## Features
 - Support for JWE and JWS token creation and validation.
-- Integrates with modern PHP development tools and practices.
 - PSR-4 autoloading compliant.
 
 ## Installation
@@ -54,6 +53,11 @@ HS256 (HMAC with SHA-256) is a symmetric algorithm recommended by the [JWS speci
 #### How to Create a HS256 Token 
 
 ```php
+use SecureTokenPhp\JwsToken;
+use SecureTokenPhp\JwsHeader;
+use SecureTokenPhp\Crypto;
+use SecureTokenPhp\Payload;
+
 $payload = new Payload();
 $payload->setClaim(claimName: "name", claimValue: "jimbob");
 
@@ -67,6 +71,15 @@ $token->signToken();
 //validate newly created token
 $this->assertTrue(Crypto::validate(token: $token));
 //retrieve claim
+$this->assertEquals($token->getClaim("name"), "jimbob");
+
+
+//serialize token
+$encodedToken = $this->encodeWithSignature()
+$this->assertIsString($serializedToken);
+
+//deserialize token
+$deserializedToken = JwsToken::fromEncoded($encodedToken, symmetricKey: $mysecretkey);
 $this->assertEquals($token->getClaim("name"), "jimbob");
 ```
 
