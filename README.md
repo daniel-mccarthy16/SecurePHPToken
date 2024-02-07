@@ -11,7 +11,12 @@ This project is mainly for educational purposes and should be used accordingly.
 - PSR-4 autoloading compliant.
 
 ## Installation
-To install the library, run the following command in your project directory:
+
+The `daniel/secure-token-php` library is currently in its alpha stages and will be available for installation via Composer once it's officially released on Packagist. 
+
+### Future Installation Steps
+
+Once the library is available on Packagist, you will be able to install it by running the following command in your project directory:
 
 ```bash
 composer require daniel/secure-token-php
