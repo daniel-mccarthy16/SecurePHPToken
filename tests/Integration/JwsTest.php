@@ -137,7 +137,6 @@ final class JwsTest extends TestCase
      */
     public function hmacSha256CorrectlyIdentifysMismatchedSignature()
     {
-
         $token = JwsToken::fromEncoded(self::HS256_ENCODED_TOKEN_INVALID_SIG, symmetricKey: self::HS256KEY);
         $this->assertInstanceOf(Token::class, $token);
         $this->assertFalse(Crypto::validate(token: $token));
