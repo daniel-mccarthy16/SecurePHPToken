@@ -1,7 +1,7 @@
 # SecurePHPToken
 
 ## Description
-`daniel/secure-token-php` is a comprehensive PHP JWT solution designed for creating and managing JSON Web Tokens (JWT). This library offers robust support for both JSON Web Encryption (JWE) and JSON Web Signatures (JWS), providing a versatile toolset for secure token management in PHP applications.
+`danielmccarthy/secure-token-php` is a comprehensive PHP JWT solution designed for creating and managing JSON Web Tokens (JWT). This library offers robust support for both JSON Web Encryption (JWE) and JSON Web Signatures (JWS), providing a versatile toolset for secure token management in PHP applications.
 
 ### Disclaimer
 This project is mainly for educational purposes and should be used accordingly.
@@ -12,14 +12,14 @@ This project is mainly for educational purposes and should be used accordingly.
 
 ## Installation
 
-The `daniel/secure-token-php` library is currently in its alpha stages and will be available for installation via Composer once it's officially released on Packagist. 
+The `danielmccarthy/secure-token-php` library is currently in its alpha stages and will be available for installation via Composer once it's officially released on Packagist. 
 
 ### Future Installation Steps
 
 Once the library is available on Packagist, you will be able to install it by running the following command in your project directory:
 
 ```bash
-composer require daniel/secure-token-php
+composer require danielmccarthy/secure-token-php
 ```
 
 ## Requirements
@@ -49,13 +49,13 @@ Each algorithm serves specific purposes in token management and security. Here's
 
 ## Usage
 
-This section provides examples of how to create and validate JWE and JWS tokens using `daniel/secure-token-php`.
+This section provides examples of how to create and validate JWE and JWS tokens using `danielmccarthy/secure-token-php`.
 
-### Creating a HS256 Token
+### HS256 Tokens
 
-HS256 (HMAC with SHA-256) is a symmetric algorithm recommended by the [JWS specification (RFC 7518)](https://datatracker.ietf.org/doc/html/rfc7518#section-3.1) for generating JSON Web Signatures. It uses a single secret key for both signing and verifying the token, ensuring the integrity and authenticity of the token's payload.
+HS256 (HMAC with SHA-256) is a symmetric algorithm and holds a unique position as the only one designated as 'required' for implementation in the JSON Web Algorithms (JWA) specification (RFC 7518).  It uses a single secret key for both signing and verifying the token, ensuring the integrity and authenticity of the token's payload and making it a universally accepted choice in various security-related applications.
 
-#### How to Create a HS256 Token 
+#### How to create, validate, encode and decode a HS256 Token 
 
 ```php
 use SecureTokenPhp\JwsToken;
@@ -87,6 +87,44 @@ $this->assertIsString($serializedToken);
 $deserializedToken = JwsToken::fromEncoded($encodedToken, symmetricKey: $mysecretkey);
 $this->assertEquals($token->getClaim("name"), "jimbob");
 ```
+
+### ES256 Tokens
+
+ES256 (ECDSA using P-256 and SHA-256) is endorsed as 'recommended+' in the JSON Web Algorithms (JWA) specification (RFC 7518). This asymmetric algorithm employs a private key for signing and a public key for verification, enhancing security through key separation. ES256 leverages elliptic curve cryptography, offering strong security with smaller keys and efficient processing. Ideal for systems prioritizing security with minimal resource usage.
+
+#### How to create, validate, encode and decode a ES256 Token 
+
+```php
+use SecureTokenPhp\JwsToken;
+use SecureTokenPhp\JwsHeader;
+use SecureTokenPhp\Crypto;
+use SecureTokenPhp\Payload;
+
+$payload = new Payload();
+$payload->setClaim(claimName: "name", claimValue: "jimbob");
+
+$header = new JwsHeader();
+$header->setAlgorithm(JwsAlgorithmEnum::HS256);
+
+$token = new JwsToken(header: $header, payload: $payload);
+$token->setPrivateKey($myprivatekey); 
+$token->signToken();
+
+//validate newly created token
+$this->assertTrue(Crypto::validate(token: $token), publicKey: $mypublickey);
+//retrieve claim
+$this->assertEquals($token->getClaim("name"), "jimbob");
+
+
+//serialize token
+$encodedToken = $this->encodeWithSignature()
+$this->assertIsString($serializedToken);
+
+//deserialize token
+$deserializedToken = JwsToken::fromEncoded($encodedToken, publicKey: $mypublickey);
+$this->assertEquals($token->getClaim("name"), "jimbob");
+```
+
 
 ### JWE Token Creation and Validation
 ```php
