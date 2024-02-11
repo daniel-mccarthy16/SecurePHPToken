@@ -74,7 +74,7 @@ abstract class Token
 
     public function encodeWithSignature(): string
     {
-        return $this->encode() + "." + $this->getEncodedSignature();
+        return $this->encode() . "." . $this->getEncodedSignature();
     }
 
     public function setPrivateKey(string $key): void

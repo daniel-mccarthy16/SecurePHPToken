@@ -18,30 +18,34 @@ class Payload
 
 
 
+
+    /**
+     * Constructs a payload object with optional initial claims.
+     *
+     * @param array $claims Initial claims for the payload.
+     */
     public function __construct(array $claims = [])
     {
         $this->claims = $claims;
     }
 
+/**
+     * Constructs a payload object from an encoded string.
+     *
+     * @param string $encodedPayload Base64Url encoded payload.
+     * @return self Instance of the payload.
+     * @throws InvalidPayloadException If the payload is invalid or cannot be decoded.
+     */
     public static function fromEncoded(string $encodedPayload): self
     {
-
         try {
             $base64DecodedPayload = Utility::decodeFileSystemSafeBase64($encodedPayload);
-        } catch (\InvalidArgumentException $e) {
-            throw new InvalidPayloadException($e);
-        }
-
-
-        try {
             $decodedData = Utility::jsonDecode($base64DecodedPayload);
         } catch (\InvalidArgumentException $e) {
-            throw new InvalidPayloadException($e);
+            throw new InvalidPayloadException($e->getMessage(), 0, $e);
         }
 
-        $instance = new self();
-        $instance->claims = $decodedData;
-        return $instance;
+        return new self($decodedData);
     }
 
     /**
@@ -256,6 +260,11 @@ class Payload
         return $this->claims[$claimName] ?? null;
     }
 
+/**
+     * Encodes the claims to a base64Url string.
+     *
+     * @return string Encoded claims string.
+     */
     public function encode(): string
     {
         return Utility::fileSystemSafeBase64(json_encode($this->claims));

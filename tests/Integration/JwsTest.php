@@ -80,14 +80,12 @@ final class JwsTest extends TestCase
         $this->assertEquals($token->getClaim(self::CLAIM_B_NAME), self::CLAIM_B_VALUE, 'Claim B should match.');
     }
 
-
     /**
      * @test
      * Test unsecured JWT token deserialization and validation
      */
     public function unsecuredJwtTokenDeserializationAndValidate()
     {
-
         $token = JwsToken::fromEncoded(self::UNSECURED_ENCODED_TOKEN);
         $this->assertInstanceOf(Token::class, $token);
         $this->assertTrue(Crypto::validate(token: $token));
@@ -122,7 +120,6 @@ final class JwsTest extends TestCase
         $token = new JwsToken(header: $header, payload: $payload);
         $this->assertInstanceOf(Token::class, $token);
 
-        //TODO need a set public / set private and / set key
         $token->setSymmetricalKey(self::HS256KEY);
         $token->signToken();
 
@@ -137,10 +134,21 @@ final class JwsTest extends TestCase
      */
     public function hmacSha256CorrectlyIdentifysMismatchedSignature()
     {
-
         $token = JwsToken::fromEncoded(self::HS256_ENCODED_TOKEN_INVALID_SIG, symmetricKey: self::HS256KEY);
         $this->assertInstanceOf(Token::class, $token);
         $this->assertFalse(Crypto::validate(token: $token));
+    }
+
+    /**
+     * @test
+     * Correctly serializes hmac256 tokens
+     */
+    public function hmacSha256CorrectlySerializesToken()
+    {
+        $token = JwsToken::fromEncoded(self::HS256_ENCODED_TOKEN, symmetricKey: self::HS256KEY);
+        $serializedToken = $token->encodeWithSignature();
+        $this->assertIsString($serializedToken);
+        $this->assertEquals(self::HS256_ENCODED_TOKEN, $serializedToken);
     }
 
     public function hmacSha256JwsTokenDeserializationAndValidate()

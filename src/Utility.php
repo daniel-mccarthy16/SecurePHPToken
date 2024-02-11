@@ -121,6 +121,17 @@ class Utility
         return $decodedData;
     }
 
+    /**
+     * Validates a media type string against a standard format.
+     *
+     * This method checks if the provided media type string conforms to the
+     * standard "type/subtype" format, using a regular expression for validation.
+     * Both type and subtype components must consist of alphanumeric characters
+     * and hyphens only.
+     *
+     * @param string $mediaType The media type string to validate.
+     * @return bool True if the media type is valid, false otherwise.
+     */
     public static function isValidMediaType(string $mediaType): bool
     {
         $pattern = '/^[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+$/';
