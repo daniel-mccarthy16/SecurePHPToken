@@ -74,7 +74,7 @@ class Crypto
         $aeadAlg = $token->getContentEncryptionAlgorithmOrThrow();
         match ($aeadAlg->value) {
             JweContentEncryptionEnum::A256GCM->value  => self::encryptA256GCM($token),
-            default => throw new CryptoException("Content Algorithm Encyrption specified not supported")
+            default => throw new CryptoException("Content encryption algorithm specified not supported")
         };
         self::encryptDek(token: $token);
         return $token->encode();

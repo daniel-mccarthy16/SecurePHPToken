@@ -4,9 +4,7 @@ namespace SecureTokenPhp\Tests;
 
 use PHPUnit\Framework\TestCase;
 use SecureTokenPhp\JweToken;
-use SecureTokenPhp\Token;
 use SecureTokenPhp\Crypto;
-use SecureTokenPhp\Config;
 use SecureTokenPhp\JweAlgorithmEnum;
 use SecureTokenPhp\JweContentEncryptionEnum;
 

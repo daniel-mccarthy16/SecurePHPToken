@@ -104,17 +104,17 @@ $payload = new Payload();
 $payload->setClaim(claimName: "name", claimValue: "jimbob");
 
 $header = new JwsHeader();
-$header->setAlgorithm(JwsAlgorithmEnum::HS256);
+$header->setAlgorithm(JwsAlgorithmEnum::ES256);
 
 $token = new JwsToken(header: $header, payload: $payload);
 $token->setPrivateKey($myprivatekey); 
+$token->setPublicKey($mypublickey);  
 $token->signToken();
 
 //validate newly created token
 $this->assertTrue(Crypto::validate(token: $token), publicKey: $mypublickey);
 //retrieve claim
 $this->assertEquals($token->getClaim("name"), "jimbob");
-
 
 //serialize token
 $encodedToken = $this->encodeWithSignature()
@@ -125,7 +125,41 @@ $deserializedToken = JwsToken::fromEncoded($encodedToken, publicKey: $mypublicke
 $this->assertEquals($token->getClaim("name"), "jimbob");
 ```
 
-
 ### JWE Token Creation and Validation
+JWE (JSON Web Encryption) tokens provide a secure way to encapsulate claims or payloads, ensuring confidentiality through encryption. The JWA specification recommends several algorithms for encrypting content, with RSA_OAEP & A256GCM being a popular choice due to its strong security properties. RSA_OAEP is used for encrypting the key, and A256GCM for encrypting the payload, offering both privacy and integrity protection.
+
+#### How to Create a JWE Token with RSA_OAEP & A256GCM
+
 ```php
-// Sample code for JWE token creation and validation
+use SecureTokenPhp\JweToken;
+use SecureTokenPhp\Payload;
+use SecureTokenPhp\Crypto;
+
+// Initialize payload with claims
+$payload = new Payload();
+$payload->setClaim(claimName: "name", claimValue: "jimbob");
+
+// Create a new JWE token and set algorithms
+$token = new JweToken();
+$token->setContentEncryptionAlgorithm(JweContentEncryptionEnum::A256GCM);
+$token->setKeyManagementAlgorithm(JweAlgorithmEnum::RSA_OAEP);
+
+// Note: In a real-world scenario, the public key is used by the sender to encrypt the token for the recipient. 
+// The recipient then uses their private key to decrypt the token.
+$token->setPrivateKey(file_get_contents(__DIR__ . '/../path/to/rsa_private_key.pem'));
+$token->setPublicKey(file_get_contents(__DIR__ . '/../path/to/rsa_public_key.pem'));
+
+// Encrypt the token
+$token->encrypt();
+
+// Serialize the token
+$serializedJwe = $token->encode();
+$this->assertIsString($serializedJwe);
+
+// To validate and decrypt the token
+$deserializedToken = JweToken::fromEncoded($serializedJwe);
+$deserializedToken->setPrivateKey($privateKey);
+Crypto::decrypt($deserializedToken);
+
+// Access decrypted claims
+$this->assertEquals($token->getClaim("name"), "jimbob");
