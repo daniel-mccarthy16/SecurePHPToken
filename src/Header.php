@@ -8,7 +8,6 @@ abstract class Header
 {
     protected array $headers = [];
 
-    private const ALGORITHM = 'alg';
     private const TYPE = 'typ';
 
     /**

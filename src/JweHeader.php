@@ -10,16 +10,6 @@ class JweHeader extends Header
     private const TYPE = 'typ';
 
 
-    public function setType(string $type)
-    {
-        $this->headers[self::TYPE] = $type;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->headers[self::TYPE] ?? null;
-    }
-
     public function setAlgorithm(JweAlgorithmEnum $algo)
     {
         $this->headers[self::ALGORITHM] = $algo->value;
