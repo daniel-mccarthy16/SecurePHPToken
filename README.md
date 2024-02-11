@@ -8,7 +8,8 @@ This project is mainly for educational purposes and should be used accordingly.
 
 ## Features
 - Support for JWE and JWS token creation and validation.
-- PSR-4 autoloading compliant.
+- Designed to be lightweight with **no runtime dependencies**, ensuring easy integration into any PHP project without adding overhead.
+- Full compliance with the JSON Web Token (JWT), JSON Web Signature (JWS), and JSON Web Encryption (JWE) specifications.
 
 ## Installation
 
@@ -163,3 +164,22 @@ Crypto::decrypt($deserializedToken);
 
 // Access decrypted claims
 $this->assertEquals($token->getClaim("name"), "jimbob");
+```
+
+## Development Commands
+
+This library includes a set of Composer scripts to facilitate development and testing. You can execute these commands from the terminal to perform various tasks:
+
+- **Testing**: Run all unit tests to ensure the library functions as expected.
+  ```sh
+  composer test
+  ```
+- **Linting**: Check the code for syntax errors and ensure it adheres to PHP's best practices. This helps maintain code quality and consistency.
+  ```sh
+  composer lint
+  ```
+- **Code Formatting**: Automatically check and fix code formatting to comply with the PSR-12 coding standard, which is a set of guidelines for writing clean and readable PHP code.
+```sh
+  composer check-format
+  composer check-style
+```

@@ -1,5 +1,5 @@
 {
-    "name": "daniel/secure-token-php",
+    "name": "danielmccarthy/secure-token-php",
     "description": "comprehensive php JWT solution",
     "type": "library",
     "authors": [
